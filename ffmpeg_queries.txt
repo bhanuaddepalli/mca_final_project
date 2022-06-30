@@ -1,0 +1,7 @@
+ffmpeg -re -stream_loop -1 -i birds.mp4 -codec:v h264 -tune zerolatency -codec:a aac -preset ultrafast -b:v 2M -f rtsp rtsp://localhost:8900/birds
+
+ffmpeg -re -stream_loop -1 -i animals.mp4 -codec:v h264 -tune zerolatency -codec:a aac -preset ultrafast -b:v 2M -f rtsp rtsp://localhost:8900/animals
+
+ffmpeg -re -stream_loop -1 -i 5min.mp4 -codec:v h264 -tune zerolatency -an -preset ultrafast -b:v 2M -f rtsp rtsp://localhost:8900/5min
+
+ffmpeg -f dshow -i video="Integrated Camera":audio="Microphone Array (Intel® Smart Sound Technology for Digital Microphones)" -profile:v high -pix_fmt yuvj420p -level:v 4.1 -preset ultrafast -tune zerolatency -vcodec libx264 -r 10 -b:v 512k -s 640x360 -acodec aac -ac 2 -ab 32k -ar 44100 -f flv rtmp://localhost:1935/app/webCamStream
