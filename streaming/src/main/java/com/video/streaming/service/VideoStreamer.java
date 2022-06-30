@@ -23,10 +23,10 @@ import javax.annotation.PreDestroy;
  * The Class OceanPerception.
  */
 @Component
-public class OceanPerception {
+public class VideoStreamer {
 
     /** The Constant Log. */
-    private static final Logger Log = LoggerFactory.getLogger(OceanPerception.class);
+    private static final Logger Log = LoggerFactory.getLogger(VideoStreamer.class);
 
     /** The stream repository. */
     @Autowired
@@ -41,7 +41,7 @@ public class OceanPerception {
     private String logsFolder;
 
     /** The stream thread map. */
-    private ConcurrentHashMap<Long, OpThread> streamThreadMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Long, StreamThread> streamThreadMap = new ConcurrentHashMap<>();
 
     /** The accepted status. */
     private static final HashSet<String> acceptedStatus = new HashSet<String>();
@@ -102,16 +102,16 @@ public class OceanPerception {
                         streamThreadMap.get(streamDetails.getStreamId()).stop();
                     }
                     streamThreadMap.remove(streamDetails.getStreamId());
-                    OpThread opThread = new OpThread(streamDetails, this);
-                    opThread.start();
-                    streamThreadMap.put(streamDetails.getStreamId(), opThread);
+                    StreamThread streamThread = new StreamThread(streamDetails, this);
+                    streamThread.start();
+                    streamThreadMap.put(streamDetails.getStreamId(), streamThread);
                 }
             }
             else {
-                if (acceptedStatus.contains(streamDetails.getStreamStatus().toString()) ) {
-                    OpThread opThread = new OpThread(streamDetails, this);
-                    opThread.start();
-                    streamThreadMap.put(streamDetails.getStreamId(), opThread);
+                if (acceptedStatus.contains(streamDetails.getStreamStatus().toString()) ||  streamDetails.getStreamStatus().equals(StreamStatus.ACTIVE)) {
+                    StreamThread streamThread = new StreamThread(streamDetails, this);
+                    streamThread.start();
+                    streamThreadMap.put(streamDetails.getStreamId(), streamThread);
                 }
             }
         });

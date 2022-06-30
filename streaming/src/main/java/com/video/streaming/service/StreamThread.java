@@ -19,16 +19,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class OpThread implements Runnable {
+public class StreamThread implements Runnable {
 
     /** The Constant Log. */
-    private static final Logger Log = LoggerFactory.getLogger(OpThread.class);
+    private static final Logger Log = LoggerFactory.getLogger(StreamThread.class);
 
     /** The ocean perception. */
-    private OceanPerception oceanPerception;
+    private VideoStreamer videoStreamer;
 
     /** The stream details. */
     private Stream streamDetails;
@@ -40,10 +38,10 @@ public class OpThread implements Runnable {
      * Instantiates a new op thread.
      *
      * @param streamDetails   the stream details
-     * @param oceanPerception the ocean perception
+     * @param videoStreamer the ocean perception
      */
-    public OpThread(Stream streamDetails, OceanPerception oceanPerception) {
-        this.oceanPerception = oceanPerception;
+    public StreamThread(Stream streamDetails, VideoStreamer videoStreamer) {
+        this.videoStreamer = videoStreamer;
         this.streamDetails = streamDetails;
         Log.debug("Creating Thread for : {}", streamDetails.getStreamName());
     }
@@ -74,7 +72,7 @@ public class OpThread implements Runnable {
         String streamUrl = SysConstants.DEFAULT_STREAM_URL;
         appName = SysConstants.DEFAULT_APP_NAME_STREAM;
 
-        String output = SysConstants.DEFAULT_RTMP_URL_START + streamUrl + ":" + this.oceanPerception.getRtmpPort() + "/"
+        String output = SysConstants.DEFAULT_RTMP_URL_START + streamUrl + ":" + this.videoStreamer.getRtmpPort() + "/"
                 + appName + "/" + streamDetails.getStreamName();
 
         try {
@@ -87,7 +85,7 @@ public class OpThread implements Runnable {
             Path errorFile = Paths.get("logs", SysConstants.ERROR + "_" + streamDetails.getStreamName() + "_"
                     + dateString + SysConstants.TXT_FORMAT);
             Files.deleteIfExists(errorFile);
-            Files.createDirectories(Paths.get(this.oceanPerception.getLogsFolder()));
+            Files.createDirectories(Paths.get(this.videoStreamer.getLogsFolder()));
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectError(errorFile.toFile());
             process = processBuilder.start();
@@ -97,7 +95,7 @@ public class OpThread implements Runnable {
             streamDetails.setComments("Stream is UP and Running");
             streamDetails.setStreamApplicationName("ws://" + streamUrl + ":3333/"
                     + appName + "/" + streamDetails.getStreamName());
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
             Integer returnCode = process.waitFor();
             Log.debug("Stream id {} got : {} return code ", streamDetails.getStreamId(), returnCode);
             if (returnCode > 0) {
@@ -106,16 +104,16 @@ public class OpThread implements Runnable {
             } else {
                 streamDetails.setStreamStatus(StreamStatus.INACTIVE);
             }
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
         } catch (InterruptedException e) {
             Log.error("Interrupted while running Query for Stream: {}", streamDetails.getStreamId());
             streamDetails.setStreamStatus(StreamStatus.INACTIVE);
             streamDetails.setComments(e.getMessage());
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
         } catch (Exception e) {
             streamDetails.setStreamStatus(StreamStatus.EXCEPTION);
             streamDetails.setComments(e.getMessage());
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
             Log.error("Error while running Query Stream: {}", streamDetails.getStreamId());
         }
     }
@@ -130,7 +128,7 @@ public class OpThread implements Runnable {
         String streamUrl = SysConstants.DEFAULT_STREAM_URL;
         appName = SysConstants.DEFAULT_APP_NAME_STREAM;
 
-        String output = SysConstants.DEFAULT_RTMP_URL_START + streamUrl + ":" + this.oceanPerception.getRtmpPort() + "/"
+        String output = SysConstants.DEFAULT_RTMP_URL_START + streamUrl + ":" + this.videoStreamer.getRtmpPort() + "/"
                 + appName + "/" + streamDetails.getStreamName();
         streamDetails.setStreamApplicationName("ws://" + streamUrl + ":3333/"
                 + appName + "/" + streamDetails.getStreamName());
@@ -143,35 +141,35 @@ public class OpThread implements Runnable {
             Path errorFile = Paths.get("logs", SysConstants.ERROR + "_" + streamDetails.getStreamName() + "_"
                     + dateString + SysConstants.TXT_FORMAT);
             Files.deleteIfExists(errorFile);
-            Files.createDirectories(Paths.get(this.oceanPerception.getLogsFolder()));
+            Files.createDirectories(Paths.get(this.videoStreamer.getLogsFolder()));
             processBuilder.redirectError(ProcessBuilder.Redirect.to(errorFile.toFile()));
             process = processBuilder.start();
             streamDetails.setStreamStatus(StreamStatus.ACTIVE);
             streamDetails.setStreamUrlRelativePath(
                     streamDetails.getStreamApplicationName() + "/" + streamDetails.getStreamName());
             streamDetails.setComments("Stream is UP and Running");
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
             Integer returnCode = process.waitFor();
 
             if (returnCode > 0) {
                 streamDetails.setStreamStatus(StreamStatus.EXCEPTION);
                 streamDetails.setComments("Error while running query with return code " + returnCode);
                 Log.warn("Stream id {} got : {} return code ", streamDetails.getStreamId(), returnCode);
-                oceanPerception.updateThreadList(streamDetails);
+                videoStreamer.updateThreadList(streamDetails);
             } else {
                 Log.warn("Stream id {} got : {} Got Closed ", streamDetails.getStreamId(), returnCode);
                 streamDetails.setStreamStatus(StreamStatus.INACTIVE);
             }
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
         } catch (InterruptedException e) {
             Log.error("Interrupted while running Query for Stream: {}", streamDetails.getStreamId());
             streamDetails.setStreamStatus(StreamStatus.INACTIVE);
             streamDetails.setComments(e.getMessage());
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
         } catch (Exception e) {
             streamDetails.setStreamStatus(StreamStatus.EXCEPTION);
             streamDetails.setComments(e.getMessage());
-            oceanPerception.updateStreams(streamDetails);
+            videoStreamer.updateStreams(streamDetails);
             Log.error("Error while running Query Stream: {}", streamDetails.getStreamId());
         }
     }
